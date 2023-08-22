@@ -3,32 +3,25 @@ package tcpinfo
 import (
 	"context"
 	"errors"
-	"log"
 	"net"
 )
 
-type ctxFDKey struct{}
+type ctxConnKey struct{}
 
 // HTTPConnFDMiddleware extracts a file descriptor of client connection
 // and returns a copy of parent context in which passed fd
-func HTTPConnFDMiddleware(ctx context.Context, c net.Conn) context.Context {
-	fd, err := ExtractFDFromConn(c)
-	if err != nil {
-		log.Println("can't extract FD from connection: ", err)
-		return ctx
-	}
-
-	return setFD2Ctx(ctx, fd)
+func HTTPConnFDMiddleware(ctx context.Context, conn net.Conn) context.Context {
+	return setConn2Ctx(ctx, conn)
 }
 
-func setFD2Ctx(ctx context.Context, fd uintptr) context.Context {
-	return context.WithValue(ctx, ctxFDKey{}, fd)
+func setConn2Ctx(ctx context.Context, conn net.Conn) context.Context {
+	return context.WithValue(ctx, ctxConnKey{}, conn)
 }
 
 // ExtractFDFromCtx returns extracted file descriptor from context
 // Bool flag indicates whether fd was found
 func ExtractFDFromCtx(ctx context.Context) (uintptr, bool) {
-	fd, ok := ctx.Value(ctxFDKey{}).(uintptr)
+	fd, ok := ctx.Value(ctxConnKey{}).(uintptr)
 	return fd, ok
 }
 
